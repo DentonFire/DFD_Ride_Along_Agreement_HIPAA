@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City of Denton - HIPAA Observer Agreement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .container {
+            max-width: 8.5in;
+            margin: 32px auto;
+        }
+
+        .header {
+            background-color: #152a40;
+            color: #ffffff;
+            text-align: center;
+            padding: 32px;
+            border-top-left-radius: 1rem;
+            border-top-right-radius: 1rem;
+        }
+
+        .footer {
+            background-color: #152a40;
+            color: #ffffff;
+            text-align: center;
+            padding: 32px;
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+        }
+        
+        .page {
+            background: white;
+            padding: 1in 0.75in;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            line-height: 1.6;
+            margin-bottom: 20px; /* Space between pages on screen */
+        }
+
+        .page-content p {
+            font-size: 1rem;
+            margin-bottom: 1.5em;
+            text-align: justify;
+        }
+
+        .form-title {
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #152a40;
+        }
+        
+        .form-subtitle {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            border: none;
+            border-bottom: 1px solid #777;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            padding: 4px 2px;
+            margin: 0 4px;
+        }
+        
+        .signature-area {
+            margin-top: 2.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: flex-end;
+        }
+        
+        .signature-field {
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .signature-pad-container {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            position: relative;
+            height: 100px;
+            margin-bottom: 8px;
+        }
+
+        #participant-sig-pad, #witness-sig-pad {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .clear-signature {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #efefef;
+            border: 1px solid #ccc;
+            color: #555;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-field label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-field input {
+            width: 100%;
+        }
+
+        .download-section {
+            background: white;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .download-btn {
+            background-color: #bf2726;
+            color: #ffffff;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            display: inline-block;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .preview-btn {
+            background-color: #152a40;
+        }
+        
+        #preview-panel {
+            margin-top: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+
+        #preview-panel img {
+            width: 100%;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #bf2726;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header" data-html2canvas-ignore="true">
+            <img src="https://files.constantcontact.com/3720c3fd901/10017eb4-f7d2-424d-92ed-c1b5424b9869.png" alt="Denton Fire Department Patch" style="height: 145px; width: 110px; margin-bottom: 16px;" />
+            <h1 style="font-size: 2.25rem; line-height: 2.5rem; font-weight: 900; color: #f9c031; margin: 0;">City of Denton</h1>
+            <p style="font-size: 1.125rem; line-height: 1.75rem; margin-top: 8px; color: #bf2726; font-weight: bold;">Ride-Along Program</p>
+        </div>
+
+        <div id="form-content">
+            <!-- Page 1: Agreement Text -->
+            <div class="page">
+                <div class="page-content">
+                    <h1 class="form-title">DENTON FIRE DEPARTMENT</h1>
+                    <h2 class="form-subtitle">Ride-Along Program HIPAA Observer Agreement</h2>
+                    
+                    <p>
+                        The Health Insurance Portability and Accountability Act (HIPAA) of 1996 and Chapter 181 of the Texas Health and Safety Code limits departmental disclosure of the protected health information of any patient to specific uses such as the provision of treatment or other health care services, for billing and payment purposes, and for health care operational purposes. Additionally, the department is authorized to release health information for a number of specialized purposes (to assist in the prevention or control of public health risks, selected assistance to law enforcement agencies, assistance to federal officials in the interests of national security, etc.).
+                    </p>
+
+                    <p>
+                        As a participant in the department's Ride-Along Program, you are specifically prohibited from discussing individual patients, their treatment, and any other information that could be utilized to identify these patients with anyone except those departmental personnel who will be conducting your ride along activities. Any disclosure of patient information as detailed above may subject you to civil and/or criminal penalties as prescribed by law.
+                    </p>
+
+                    <p>
+                        Should special circumstances necessitate that you utilize or disseminate such information (e.g. school reports, patient reports); the EMS Division office of the Denton Fire Department will assist you in ensuring that the material is in such form that it cannot be utilized to identify a specific incident. No health-related information may be utilized without review and subsequent authorization by the Fire Chief or his designee.
+                    </p>
+                    
+                    <p>
+                        As a participant in the Denton Fire Department Ride-Along Program, I understand the restrictions outlined above and I agree to abide by the requirements of this agreement. I understand that I may be subject to civil or criminal penalties should I violate the prohibitions set forth in the Health Insurance Portability and Accountability Act of 1996 and Chapter 181 of the Texas Health and Safety Code.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Page 2: Signatures and Fields -->
+            <div class="page">
+                <div class="page-content">
+                     <div class="form-grid">
+                        <div class="form-field">
+                            <label for="participant-name">Ride-Along Participant Printed Name</label>
+                            <input type="text" id="participant-name">
+                        </div>
+                        <div class="form-field">
+                            <label for="participant-date">Date</label>
+                            <input type="date" id="participant-date">
+                        </div>
+                    </div>
+                    
+                     <div class="signature-area">
+                        <div class="form-field">
+                            <label for="participant-sig-pad">Ride-Along Participant Signature</label>
+                            <div class="signature-pad-container">
+                                <canvas id="participant-sig-pad"></canvas>
+                                <button class="clear-signature" data-pad="participant-sig-pad">Clear</button>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                             <!-- empty cell for spacing -->
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                         <div class="form-field">
+                            <label for="witness-name">Witness Printed Name</label>
+                            <input type="text" id="witness-name">
+                        </div>
+                        <div class="form-field">
+                            <label for="witness-date">Date</label>
+                            <input type="date" id="witness-date">
+                        </div>
+                    </div>
+                    
+                    <div class="signature-area">
+                        <div class="form-field">
+                            <label for="witness-sig-pad">Witness Signature</label>
+                            <div class="signature-pad-container">
+                                <canvas id="witness-sig-pad"></canvas>
+                                <button class="clear-signature" data-pad="witness-sig-pad">Clear</button>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <!-- empty cell for spacing -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-section" data-html2canvas-ignore="true">
+             <button id="preview-btn" class="download-btn preview-btn">Preview</button>
+             <button id="download-btn" class="download-btn">Download Completed Form</button>
+             <div id="preview-panel"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer" data-html2canvas-ignore="true">
+            <h3 style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #f9c031; margin:0;">Stay Strong. Stay Safe.</h3>
+            <p style="margin-top: 8px; color: #D1D5DB;">This is your starting line. The commitment to fitness lasts your entire career.</p>
+            <div style="margin-top: 16px; color: #9CA3AF;">
+                <p style="margin:0;">Denton Fire Department</p>
+                <p style="margin:0;">(940) 349-8848 | DentonFire@cityofdenton.com</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const participantCanvas = document.getElementById('participant-sig-pad');
+            const witnessCanvas = document.getElementById('witness-sig-pad');
+            
+            const participantPad = new SignaturePad(participantCanvas, { backgroundColor: 'rgb(255, 255, 255)' });
+            const witnessPad = new SignaturePad(witnessCanvas, { backgroundColor: 'rgb(255, 255, 255)' });
+
+            function resizeCanvas(canvas) {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+            }
+
+            window.addEventListener("resize", () => {
+                resizeCanvas(participantCanvas);
+                participantPad.clear();
+                resizeCanvas(witnessCanvas);
+                witnessPad.clear();
+            });
+            resizeCanvas(participantCanvas);
+            resizeCanvas(witnessCanvas);
+
+            document.querySelectorAll('.clear-signature').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const padId = e.target.dataset.pad;
+                    if (padId === 'participant-sig-pad') {
+                        participantPad.clear();
+                    } else if (padId === 'witness-sig-pad') {
+                        witnessPad.clear();
+                    }
+                });
+            });
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('participant-date').value = today;
+            document.getElementById('witness-date').value = today;
+
+            const downloadBtn = document.getElementById('download-btn');
+            const previewBtn = document.getElementById('preview-btn');
+            const previewPanel = document.getElementById('preview-panel');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const { jsPDF } = window.jspdf;
+
+            async function prepareAndCapture(action) {
+                if (participantPad.isEmpty() || !document.getElementById('participant-name').value) {
+                    alert("Please ensure the participant's name is filled out and a signature is provided.");
+                    return;
+                }
+                
+                loadingOverlay.style.display = 'flex';
+                if (action === 'preview') {
+                    previewPanel.innerHTML = '';
+                    previewPanel.style.display = 'block';
+                }
+
+                const canvases = [
+                    { pad: participantPad, el: participantCanvas },
+                    { pad: witnessPad, el: witnessCanvas }
+                ];
+                const cleanupSteps = [];
+
+                for (const item of canvases) {
+                    if (!item.pad.isEmpty()) {
+                        const canvasEl = item.el;
+                        const sigContainer = canvasEl.parentElement;
+                        const sigImgElement = document.createElement('img');
+                        sigImgElement.src = item.pad.toDataURL('image/png');
+                        sigImgElement.style.width = '100%';
+                        sigImgElement.style.height = '100%';
+                        sigImgElement.style.position = 'absolute';
+                        sigImgElement.style.top = '0';
+                        sigImgElement.style.left = '0';
+                        canvasEl.style.display = 'none';
+                        sigContainer.querySelector('.clear-signature').style.display = 'none';
+                        sigContainer.appendChild(sigImgElement);
+                        cleanupSteps.push(() => {
+                            canvasEl.style.display = 'block';
+                            sigContainer.querySelector('.clear-signature').style.display = 'block';
+                            sigContainer.removeChild(sigImgElement);
+                        });
+                    }
+                }
+                
+                const container = document.querySelector('.container');
+                const originalContainerStyle = container.style.cssText;
+                container.style.maxWidth = 'none';
+                container.style.width = '8.5in';
+
+                try {
+                    if (action === 'download') {
+                        const pdf = new jsPDF({ orientation: 'p', unit: 'in', format: 'letter' });
+                        const pages = document.querySelectorAll('#form-content .page');
+                        for (let i = 0; i < pages.length; i++) {
+                            const page = pages[i];
+                            const canvasResult = await html2canvas(page, { scale: 3, useCORS: true });
+                            const imgData = canvasResult.toDataURL('image/png');
+                            const pdfWidth = pdf.internal.pageSize.getWidth();
+                            const imgProps = pdf.getImageProperties(imgData);
+                            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                            if (i > 0) pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        }
+                        pdf.save('City-of-Denton-HIPAA-Agreement.pdf');
+
+                    } else if (action === 'preview') {
+                         const pages = document.querySelectorAll('#form-content .page');
+                         for (const page of pages) {
+                            const canvasResult = await html2canvas(page, { scale: 3, useCORS: true });
+                            const imgData = canvasResult.toDataURL('image/png');
+                            const imgElement = document.createElement('img');
+                            imgElement.src = imgData;
+                            previewPanel.appendChild(imgElement);
+                         }
+                    }
+
+                } catch (err) {
+                    console.error(`${action} failed`, err);
+                    alert(`Sorry, there was an error during the ${action} process.`);
+                } finally {
+                    loadingOverlay.style.display = 'none';
+                    container.style.cssText = originalContainerStyle;
+                    cleanupSteps.forEach(step => step());
+                }
+            }
+
+            previewBtn.addEventListener('click', () => prepareAndCapture('preview'));
+            downloadBtn.addEventListener('click', () => prepareAndCapture('download'));
+        });
+    </script>
+</body>
+</html>
+
